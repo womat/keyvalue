@@ -1,0 +1,17 @@
+# keyvalue has no dependencies outside the standard library, so only the
+# actions in the CI workflow need watching. To switch this off, delete this
+# file. The CI workflow does not depend on it.
+
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      actions:
+        patterns:
+          - "*"

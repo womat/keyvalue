@@ -1,8 +1,14 @@
 # keyvalue
 
+[![CI](https://github.com/womat/keyvalue/actions/workflows/ci.yml/badge.svg)](https://github.com/womat/keyvalue/actions/workflows/ci.yml)
+
 A `map[string]any` with converting typed accessors, for data whose shape is
 only known at runtime — a decoded JSON document, a row from a database, a set
 of measured values.
+
+```sh
+go get github.com/womat/keyvalue
+```
 
 ```go
 r := keyvalue.NewRecord()
@@ -94,14 +100,14 @@ pointer inside the record must not be modified from both sides.
 ## Testing
 
 ```sh
-go test -race ./keyvalue/
+go test -race ./...
 ```
 
-Coverage is 95.8 % of statements. The 32-bit behaviour is covered by `TestIntNarrowingOnSmallPlatforms`, which
+Coverage is 95.7 % of statements. The 32-bit behaviour is covered by `TestIntNarrowingOnSmallPlatforms`, which
 adapts to `strconv.IntSize`. To exercise it for real:
 
 ```sh
-GOOS=linux GOARCH=arm GOARM=7 go test -c -o /tmp/kv.test ./keyvalue/
+GOOS=linux GOARCH=arm GOARM=7 go test -c -o /tmp/kv.test .
 docker run --rm --platform linux/arm/v7 -v /tmp/kv.test:/kv.test:ro alpine /kv.test
 ```
 
@@ -122,4 +128,16 @@ Known and deliberately left alone:
 - **No `Record`-level accessor for a nested record.** `Value(key)` returns
   `any`, and the caller does the type assertion.
 
-Full API: `go doc github.com/womat/golib/keyvalue`.
+Full API: `go doc github.com/womat/keyvalue`.
+
+## History
+
+Until v1.0.0 this package lived in
+[github.com/womat/golib](https://github.com/womat/golib) as `golib/keyvalue`;
+its history came along. The API is unchanged — moving over is a change of the
+import path from `github.com/womat/golib/keyvalue` to
+`github.com/womat/keyvalue`.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
