@@ -22,7 +22,8 @@
 //	    }
 //
 //	    for _, k := range r.GetSortedKeys() {
-//	        fmt.Println(k, r.Value(k))
+//	        v, _ := r.Value(k)
+//	        fmt.Println(k, v)
 //	    }
 //	    _, _, _, _ = port, debug, factor, missing
 //	}
@@ -35,7 +36,7 @@
 // a missing key. The accessors never report an error, so use Exists or Value
 // where the difference matters.
 //
-// Three rules are easy to get wrong:
+// Four rules are easy to get wrong:
 //
 //   - Bool treats any non-zero number as true, NaN excepted. Strings that name
 //     a truth value ("true", "yes", "on" and their negatives) are recognised as
@@ -44,6 +45,9 @@
 //     GOARCH=arm builds for the Raspberry Pi, a value that does not fit reads
 //     as 0 rather than as a truncated number. Use Int64 where the range
 //     matters.
+//   - Strings are parsed strictly per target type: Int("3.9") is 0 because
+//     strconv.Atoi rejects it, while Float64("3.9") is 3.9 and Int of the
+//     float 3.9 is 3.
 //   - Float64 also converts from bool, and an int64 beyond 2^53 does not
 //     survive the conversion: it returns the nearest representable value and
 //     therefore disagrees with Int64 on the same key.

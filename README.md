@@ -1,6 +1,7 @@
 # keyvalue
 
 [![CI](https://github.com/womat/keyvalue/actions/workflows/ci.yml/badge.svg)](https://github.com/womat/keyvalue/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/womat/keyvalue.svg)](https://pkg.go.dev/github.com/womat/keyvalue)
 
 A `map[string]any` with converting typed accessors, for data whose shape is
 only known at runtime — a decoded JSON document, a row from a database, a set
@@ -9,6 +10,8 @@ of measured values.
 ```sh
 go get github.com/womat/keyvalue
 ```
+
+Requires Go 1.27 or later. No dependencies outside the standard library.
 
 ```go
 r := keyvalue.NewRecord()
@@ -62,7 +65,8 @@ number. Use `Int64` where the range matters.
 `strconv.Atoi` rejects it, while `Float64("3.9")` is `3.9` and `Int` of the
 float `3.9` is `3`. A float outside the `int64` range, an infinity or a NaN
 reads as `0` rather than as whatever the platform's conversion happens to
-produce.
+produce. Surrounding whitespace is not trimmed: `" 1"` reads as `0`, and as
+`false` from `Bool`.
 
 **`Float64` converts from `bool` and loses precision on large integers.**
 `true` reads as `1.0`, `false` as `0.0` — the only accessor besides `Bool` that
@@ -103,8 +107,10 @@ pointer inside the record must not be modified from both sides.
 go test -race ./...
 ```
 
-Coverage is 95.7 % of statements. The 32-bit behaviour is covered by `TestIntNarrowingOnSmallPlatforms`, which
-adapts to `strconv.IntSize`. To exercise it for real:
+Coverage is 98.6 % of statements on a 64-bit platform; the one line left out
+only runs where `int` is 32 bits wide. CI runs the tests on `linux/386` for
+that reason. `TestIntNarrowingOnSmallPlatforms` adapts to `strconv.IntSize`;
+to exercise it on a Raspberry Pi target:
 
 ```sh
 GOOS=linux GOARCH=arm GOARM=7 go test -c -o /tmp/kv.test .
@@ -128,7 +134,9 @@ Known and deliberately left alone:
 - **No `Record`-level accessor for a nested record.** `Value(key)` returns
   `any`, and the caller does the type assertion.
 
-Full API: `go doc github.com/womat/keyvalue`.
+Full API with runnable examples:
+[pkg.go.dev/github.com/womat/keyvalue](https://pkg.go.dev/github.com/womat/keyvalue),
+or `go doc github.com/womat/keyvalue`.
 
 ## History
 
@@ -137,6 +145,9 @@ Until v1.0.0 this package lived in
 its history came along. The API is unchanged — moving over is a change of the
 import path from `github.com/womat/golib/keyvalue` to
 `github.com/womat/keyvalue`.
+
+Releases follow [semantic versioning](https://semver.org): within v1 the API
+stays compatible.
 
 ## License
 

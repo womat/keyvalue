@@ -47,7 +47,7 @@ func TestIntConversionOutOfRange(t *testing.T) {
 func TestIntNarrowingOnSmallPlatforms(t *testing.T) {
 	// A variable, not a constant: int(const) is evaluated at compile time and
 	// would fail the 32-bit build even in the branch that never runs there.
-	var tooBigFor32Bit int64 = 4301234567890 // a phone number, as it happens
+	var tooBigFor32Bit int64 = 4301234567890
 
 	r := Record{"v": tooBigFor32Bit}
 
@@ -65,7 +65,7 @@ func TestIntNarrowingOnSmallPlatforms(t *testing.T) {
 	default:
 		if got != 0 {
 			t.Errorf("Int() = %d, want 0: the value does not fit a %d-bit int, "+
-				"and a silently truncated phone number is worse than none", got, strconv.IntSize)
+				"and a silently truncated number is worse than none", got, strconv.IntSize)
 		}
 	}
 }
@@ -196,6 +196,13 @@ func TestUnsupportedTypesYieldZero(t *testing.T) {
 		if got := r.Bool("v"); got {
 			t.Errorf("Bool() = true for %T, want false", value)
 		}
+		if got := r.Int64("v"); got != 0 {
+			t.Errorf("Int64() = %d for %T, want 0", got, value)
+		}
+		// float32 included: Float64 does not widen it.
+		if got := r.Float64("v"); got != 0 {
+			t.Errorf("Float64() = %v for %T, want 0", got, value)
+		}
 	}
 }
 
@@ -258,5 +265,95 @@ func TestBoolIsNonZero(t *testing.T) {
 				t.Errorf("Bool() = %v for %#v, want %v", got, tt.value, tt.want)
 			}
 		})
+	}
+}
+
+// TestInt64Source covers an int64 read through Float64 and String, which the
+// table tests only ever store as int.
+func TestInt64Source(t *testing.T) {
+	r := Record{"v": int64(-42)}
+
+	if got := r.Float64("v"); got != -42 {
+		t.Errorf("Float64() = %v, want -42", got)
+	}
+	if got := r.String("v"); got != "-42" {
+		t.Errorf("String() = %q, want %q", got, "-42")
+	}
+}
+
+// TestFloatAtTheUpperInt64Boundary pins down the case the comment in
+// floatToInt64 is about: float64(math.MaxInt64) rounds up to 2^63, which does
+// not fit, while the largest float below it does.
+func TestFloatAtTheUpperInt64Boundary(t *testing.T) {
+	twoTo63 := float64(math.MaxInt64)
+	below := math.Nextafter(twoTo63, 0)
+
+	if got := (Record{"v": twoTo63}).Int64("v"); got != 0 {
+		t.Errorf("Int64(2^63) = %d, want 0", got)
+	}
+	if got, want := (Record{"v": below}).Int64("v"), int64(below); got != want {
+		t.Errorf("Int64(2^63 - 1024) = %d, want %d", got, want)
+	}
+}
+
+// TestNilRecord holds the package to what NewRecord documents: reading from
+// the nil zero value is harmless, writing to it panics.
+func TestNilRecord(t *testing.T) {
+	var r Record
+
+	if r.Exists("k") || r.Int("k") != 0 || r.Int64("k") != 0 || r.Float64("k") != 0 ||
+		r.Bool("k") || r.String("k") != "" {
+		t.Error("reading from a nil record returned something other than zero values")
+	}
+	if v, ok := r.Value("k"); v != nil || ok {
+		t.Errorf("Value() = (%v, %v), want (<nil>, false)", v, ok)
+	}
+	if keys := r.GetSortedKeys(); len(keys) != 0 {
+		t.Errorf("GetSortedKeys() = %v, want none", keys)
+	}
+
+	// The copy of a nil record is an empty, writable one.
+	c := r.Copy()
+	if c == nil {
+		t.Fatal("Copy() of a nil record is nil")
+	}
+	c.Set("k", 1)
+
+	defer func() {
+		if recover() == nil {
+			t.Error("Set on a nil record did not panic")
+		}
+	}()
+	r.Set("k", 1)
+}
+
+// TestStringFormatsFloats records how String renders floats that have no
+// ordinary decimal form.
+func TestStringFormatsFloats(t *testing.T) {
+	tests := []struct {
+		value float64
+		want  string
+	}{
+		{math.NaN(), "NaN"},
+		{math.Inf(1), "+Inf"},
+		{math.Inf(-1), "-Inf"},
+		{1e-30, "0.000000000000000000000000000001"}, // the example from the doc
+		{math.Copysign(0, -1), "-0"},
+	}
+
+	for _, tt := range tests {
+		if got := (Record{"v": tt.value}).String("v"); got != tt.want {
+			t.Errorf("String(%v) = %q, want %q", tt.value, got, tt.want)
+		}
+	}
+}
+
+// TestBoolDoesNotTrimSpace: " true" is neither a recognised word nor a number,
+// so it reads as false. Callers with untrimmed input have to trim it.
+func TestBoolDoesNotTrimSpace(t *testing.T) {
+	for _, s := range []string{" true", "true ", " 1"} {
+		if (Record{"v": s}).Bool("v") {
+			t.Errorf("Bool(%q) = true, want false", s)
+		}
 	}
 }
