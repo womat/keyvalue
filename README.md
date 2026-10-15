@@ -140,9 +140,10 @@ or `go doc github.com/womat/keyvalue`.
 
 ## History
 
-Until v1.0.0 this package lived in
-[github.com/womat/golib](https://github.com/womat/golib) as `golib/keyvalue`;
-its history came along. The API is unchanged — moving over is a change of the
+Before this repository, the package lived in
+[github.com/womat/golib](https://github.com/womat/golib) as
+`github.com/womat/golib/keyvalue` (deprecated there, removed in golib v2); its
+history came along. The API is unchanged — moving over is a change of the
 import path from `github.com/womat/golib/keyvalue` to
 `github.com/womat/keyvalue`.
 
