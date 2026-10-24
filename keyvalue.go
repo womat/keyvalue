@@ -165,23 +165,7 @@ func (r Record) Float64(key string) float64 {
 // therefore read differently depending on whether it arrived as text or as a
 // number - relevant for YAML and JSON, where quoting decides.
 func (r Record) Int(key string) int {
-	switch i := r[key].(type) {
-	case float64:
-		return narrowToInt(floatToInt64(i))
-	case int64:
-		return narrowToInt(i)
-	case int:
-		return i
-	case string:
-		if v, err := strconv.Atoi(i); err == nil {
-			return v
-		}
-	case bool:
-		if i {
-			return 1
-		}
-	}
-	return 0
+	return narrowToInt(r.Int64(key))
 }
 
 // Int64 returns the int64 value for key.
