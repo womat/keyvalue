@@ -4,30 +4,6 @@
 // was asked for returns the zero value rather than an error.
 // For raw access without conversion, use the Value method.
 //
-// # Example usage
-//
-//	func main() {
-//	    r := keyvalue.NewRecord()
-//	    r.Set("port", 8443)
-//	    r.Set("debug", "yes")
-//	    r.Set("factor", "1.5")
-//
-//	    port := r.Int("port")        // 8443
-//	    debug := r.Bool("debug")     // true
-//	    factor := r.Float64("factor") // 1.5
-//	    missing := r.String("host")  // "" - no error, no panic
-//
-//	    if !r.Exists("host") {
-//	        // tell a missing key from a zero value
-//	    }
-//
-//	    for _, k := range r.GetSortedKeys() {
-//	        v, _ := r.Value(k)
-//	        fmt.Println(k, v)
-//	    }
-//	    _, _, _, _ = port, debug, factor, missing
-//	}
-//
 // # Conversion
 //
 // Only bool, int, int64, float64 and string are understood as source types.
@@ -47,7 +23,8 @@
 //     matters.
 //   - Strings are parsed strictly per target type: Int("3.9") is 0 because
 //     strconv.Atoi rejects it, while Float64("3.9") is 3.9 and Int of the
-//     float 3.9 is 3.
+//     float 3.9 is 3. Surrounding whitespace is not trimmed: " 1" reads as 0,
+//     and as false from Bool.
 //   - Float64 also converts from bool, and an int64 beyond 2^53 does not
 //     survive the conversion: it returns the nearest representable value and
 //     therefore disagrees with Int64 on the same key.
@@ -151,6 +128,10 @@ func isTrue(f float64) bool {
 // An integer beyond 2^53 cannot be represented exactly and is rounded, so
 // Float64 and Int64 of the same entry may disagree. Use Int64 where the exact
 // value matters.
+//
+// The strings "NaN", "Inf" and "Infinity", in any case and the latter two with
+// an optional sign, are accepted by strconv.ParseFloat and yield NaN or an
+// infinity rather than 0.
 func (r Record) Float64(key string) float64 {
 	switch i := r[key].(type) {
 	case float64:

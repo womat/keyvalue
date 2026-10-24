@@ -357,3 +357,17 @@ func TestBoolDoesNotTrimSpace(t *testing.T) {
 		}
 	}
 }
+
+// TestFloat64ParsesNaNAndInf: strconv.ParseFloat accepts these words, so a
+// value that arrives as text can read as NaN or an infinity rather than 0.
+func TestFloat64ParsesNaNAndInf(t *testing.T) {
+	if got := (Record{"v": "NaN"}).Float64("v"); !math.IsNaN(got) {
+		t.Errorf("Float64(%q) = %v, want NaN", "NaN", got)
+	}
+	if got := (Record{"v": "Inf"}).Float64("v"); got != math.Inf(1) {
+		t.Errorf("Float64(%q) = %v, want +Inf", "Inf", got)
+	}
+	if got := (Record{"v": "-infinity"}).Float64("v"); got != math.Inf(-1) {
+		t.Errorf("Float64(%q) = %v, want -Inf", "-infinity", got)
+	}
+}

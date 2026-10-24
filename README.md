@@ -107,8 +107,8 @@ pointer inside the record must not be modified from both sides.
 go test -race ./...
 ```
 
-Coverage is 98.6 % of statements on a 64-bit platform; the one line left out
-only runs where `int` is 32 bits wide. CI runs the tests on `linux/386` for
+On a 64-bit platform one line stays uncovered: it only runs where `int` is 32
+bits wide. CI runs the tests on `linux/386` for
 that reason. `TestIntNarrowingOnSmallPlatforms` adapts to `strconv.IntSize`;
 to exercise it on a Raspberry Pi target:
 
