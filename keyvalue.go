@@ -101,9 +101,9 @@ func (r Record) Bool(key string) bool {
 		return isTrue(i)
 	case string:
 		switch strings.ToLower(i) {
-		case "true", "yes", "1", "on":
+		case "true", "yes", "on":
 			return true
-		case "false", "no", "0", "off":
+		case "false", "no", "off":
 			return false
 		}
 
