@@ -5,9 +5,6 @@ import (
 	"testing"
 )
 
-const int64Zero = int64(0)
-const float64Zero = float64(0.0)
-
 var myTestRecord = Record{
 	"":            "",
 	"emptyString": "",
@@ -173,28 +170,28 @@ func Test_Int(t *testing.T) {
 func Test_Int64(t *testing.T) {
 
 	expectedConverted := map[string]int64{
-		"":            int64Zero,
-		"emptyString": int64Zero,
-		"stringa":     int64Zero,
+		"":            0,
+		"emptyString": 0,
+		"stringa":     0,
 		"string1":     int64(1),
-		"string0":     int64Zero,
+		"string0":     0,
 		"stringLong":  int64(4301234567890),
 		"int2134":     int64(2134),
 		"float3.14":   int64(3),
 		"boolTrue":    int64(1),
-		"boolFalse":   int64Zero,
+		"boolFalse":   0,
 		"int1":        int64(1),
 		"int-1":       int64(-1),
-		"int0":        int64Zero,
-		"float0.0":    int64Zero,
+		"int0":        0,
+		"float0.0":    0,
 		"float1.0":    int64(1),
 		"float-1.0":   int64(-1),
-		"float0.1":    int64Zero,
+		"float0.1":    0,
 		"floatLong":   int64(4301234567890),
-		"StringHuge":  int64Zero, // ParseInt rejects "1234567890123456.0"
-		"StringSmall": int64Zero,
+		"StringHuge":  0, // ParseInt rejects "1234567890123456.0"
+		"StringSmall": 0,
 		"floatHuge":   int64(1234567890123456),
-		"floatSmall":  int64Zero,
+		"floatSmall":  0,
 	}
 
 	for k, v := range expectedConverted {
@@ -207,22 +204,22 @@ func Test_Int64(t *testing.T) {
 
 func Test_Float(t *testing.T) {
 	expectedConverted := map[string]float64{
-		"":            float64Zero,
-		"emptyString": float64Zero,
-		"stringa":     float64Zero,
+		"":            0,
+		"emptyString": 0,
+		"stringa":     0,
 		"string1":     1.0,
-		"string0":     float64Zero,
+		"string0":     0,
 		"stringLong":  4301234567890.0,
 		"StringHuge":  1234567890123456.0,
 		"StringSmall": 0.00000012345678,
 		"int2134":     2134.0,
 		"float3.14":   3.14,
 		"boolTrue":    1.0,
-		"boolFalse":   float64Zero,
+		"boolFalse":   0,
 		"int1":        1.0,
 		"int-1":       -1.0,
-		"int0":        float64Zero,
-		"float0.0":    float64Zero,
+		"int0":        0,
+		"float0.0":    0,
 		"float1.0":    1.0,
 		"float-1.0":   -1.0,
 		"float0.1":    0.1,
@@ -243,21 +240,21 @@ func Test_Value(t *testing.T) {
 	for _, key := range []string{"", "emptyString", "stringa"} {
 		v, ok := myTestRecord.Value(key)
 		if !ok {
-			t.Errorf("unexpected for key %q", key)
+			t.Errorf("Value(%q) reports the key as missing, want present", key)
 		}
 
 		if _, ok := v.(string); !ok {
-			t.Errorf("unexpected string format for key %q", key)
+			t.Errorf("Value(%q) is %T, want string", key, v)
 		}
 	}
 
 	for _, key := range []string{"boolTrue", "boolFalse"} {
 		v, ok := myTestRecord.Value(key)
 		if !ok {
-			t.Errorf("unexpected for key %q", key)
+			t.Errorf("Value(%q) reports the key as missing, want present", key)
 		}
 		if _, ok := v.(bool); !ok {
-			t.Errorf("unexpected bool format for key %q", key)
+			t.Errorf("Value(%q) is %T, want bool", key, v)
 		}
 	}
 
@@ -265,30 +262,30 @@ func Test_Value(t *testing.T) {
 	for _, key := range []string{"int2134", "int0"} {
 		v, ok := myTestRecord.Value(key)
 		if !ok {
-			t.Errorf("unexpected for key %q", key)
+			t.Errorf("Value(%q) reports the key as missing, want present", key)
 		}
 		if _, ok := v.(int); !ok {
-			t.Errorf("unexpected int format for key %q, got %T", key, v)
+			t.Errorf("Value(%q) is %T, want int", key, v)
 		}
 	}
 
 	for _, key := range []string{"x", ",", "-2"} {
 		_, ok := myTestRecord.Value(key)
 		if ok {
-			t.Errorf("unexpected for key %q", key)
+			t.Errorf("Value(%q) reports the key as present, want missing", key)
 		}
 	}
 }
 
 func Test_Exists(t *testing.T) {
 	for _, key := range []string{"", "emptyString", "stringa"} {
-		if ok := myTestRecord.Exists(key); !ok {
-			t.Errorf("unexpected for key %s", key)
+		if !myTestRecord.Exists(key) {
+			t.Errorf("Exists(%q) = false, want true", key)
 		}
 	}
 	for _, key := range []string{"x", "YemptyString", "Zstringa"} {
-		if ok := myTestRecord.Exists(key); ok {
-			t.Errorf("unexpected for key %s", key)
+		if myTestRecord.Exists(key) {
+			t.Errorf("Exists(%q) = true, want false", key)
 		}
 	}
 }
