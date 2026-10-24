@@ -1,6 +1,8 @@
-# keyvalue has no dependencies outside the standard library, so only the
-# actions in the CI workflow need watching. To switch this off, delete this
-# file. The CI workflow does not depend on it.
+# keyvalue has no dependencies outside the standard library, so dependabot
+# only watches the actions in the CI workflow. It does not see the tools
+# pinned with "go install" there (golangci-lint, govulncheck); those are
+# bumped by hand. To switch this off, delete this file. The CI workflow does
+# not depend on it.
 
 version: 2
 
