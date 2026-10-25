@@ -3,6 +3,11 @@
 # Actions are pinned to a commit SHA, with the release in a comment: a tag like
 # @v7 can be moved to other code, a SHA cannot. dependabot (.github/dependabot.yml)
 # proposes updates for them.
+#
+# setup-go takes the version from go.mod but the newest patch of it (check-latest),
+# and the weekly run repeats govulncheck without a change here: an advisory against
+# the Go toolchain or a dependency appears between commits, and dependabot does not
+# report the toolchain.
 
 name: CI
 
@@ -10,6 +15,9 @@ on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
+  schedule:
+    - cron: "17 5 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -29,8 +37,10 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+          check-latest: true
       # Pinned rather than @latest: a new release of either tool would
       # otherwise turn this job red without a change in this repository.
+      # dependabot does not see pins in a run step; bump these by hand.
       - name: install tools
         run: |
           go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
@@ -52,8 +62,18 @@ jobs:
             echo "$diff" >&2
             exit 1
           fi
+      # Prints the diff and exits non-zero when go.mod or go.sum is not tidy;
+      # "go mod tidy" applies it.
+      - name: go mod tidy
+        run: go mod tidy -diff
       - name: go vet
         run: go vet ./...
+      # The cross job builds for macOS and Windows but compiles no _test.go file;
+      # vet does, so a test that only breaks there is caught too.
+      - name: go vet (macOS, Windows)
+        run: |
+          GOOS=darwin go vet ./...
+          GOOS=windows go vet ./...
       - name: golangci-lint
         run: golangci-lint run ./...
       - name: govulncheck
@@ -76,6 +96,7 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+          check-latest: true
       # -race needs a 64-bit target, so the 386 run goes without it.
       - name: go test
         env:
@@ -104,6 +125,7 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+          check-latest: true
       - name: go build
         env:
           GOOS: ${{ matrix.goos }}
